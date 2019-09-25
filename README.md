@@ -7,7 +7,9 @@ The content of this repo mainly comes from USC CSCI580 Computer Graphic's Lectur
 
 Ref.
 USC CSCI580 http://www-scf.usc.edu/~csci580/
+
 Computer Graphics https://www.mat.univie.ac.at/~kriegl/Skripten/CG/
+
 Real-Time Rendering(4th Edition) http://www.realtimerendering.com/
 
 # Note Template by: ElegantNote

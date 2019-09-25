@@ -1,4 +1,4 @@
-\documentclass[geye,green,pad,en]{elegantnote}
+\documentclass[geye, cyan,normal,en]{elegantnote}
 
 \title{Computer Graphic Note}
 \author{Jiechang Shi}
@@ -9,7 +9,237 @@
 
 \maketitle
 
-\section{Introduction}
-The content of Introduction.
+\section{Class 1: Overview}
+\begin{enumerate}
+	\item Frame Buffer
+	\begin{itemize}
+		\item Pixel: One element of a frame buffer
+		\item Pixel depth: Number of bytes per-pixel in the buffer
+		\item Resolution: Width $\times$ Height
+		\item Buffer size: Total memory allocated for frame buffer
+		\item \textbf{Exam Question}: Given Resolution and Pixel depth, Asked Buffer size
+		\item Z Value: For solving the hidden-surface removal(HSR) problem
+	\end{itemize}
+\end{enumerate}
 
+\section{Class 2,3: Rasterization}
+\begin{enumerate}
+	\item For each pixel on screen, the sample point of that pixel is the center point of that pixel, which have \textbf{integer} coordinates. For examples, $(3,2)$.
+	\item A simple problem: Rasterizing Lines \\
+	\textbf{Program Description}: Given two endpoints, $P = (x_0,y_0)$ , $R=(x_1,y_1)$ find the pixels that make up the line. \\
+	\textbf{Note that}: Lines are infinitely thin so they rarely fall on pixel sample point.\\
+	\textbf{A Feasible Description}: Rasterize lines as \textbf{closest} pixels to actual lines, with 2 requirement
+	\begin{itemize}
+		\item No Gap
+		\item Minimize error(distance to true line)
+	\end{itemize}
+	\textbf{To make this question simplify}: Only consider situation that $|x_1 - x_0| \geq |y_1 - y_0| \geq 0 \land |x_1-x_0| \neq 0$, which means the $-1 \leq slope \leq 1$. Otherwise we just exchange $x$ and $y$. \\
+	\textbf{A basic Algorithm}: $k=\frac{y_1-y_0}{x_1-x_0}$, $d=y_0-kx_0$, for each $x_0 \leq x \leq x_1$, $y=ROUND(kx+d)$. This method by brute force is inefficient because of the multiplication and the function $ROUND()$.\\
+	\textbf{Basic Incremental Algorithm}: for each $x_0 \leq x_i < x_{i+1} \leq x_1$, $y_{i+1} = y_i +k$, However, the successsive addition of a real number can lead to a \textbf{cumulative error buildup}!\\
+	\textbf{Midpoint Line Algorithm}: 
+	\begin{itemize}
+		\item For $0 \leq k \leq 1$
+		\item For one approximate point $P=(x,y)$, we only have 2 choices for the next point $E=(x+1,y)$ and $NE=(x+1,y+1)$, we should choose the one which is closer to $k(x+1)+d$
+		\item Calculate the middle point $M=(x+1,y+\frac{1}{2})$
+		\item If the \textbf{Intersection point} $Q$ is below $M$, take $E$ as next, otherwise take $NE$ as next.
+		\item Note that: we consider this equation:
+		$$ f(x,y)=ax+by+c=(y_1-y_0)x - (x_1-x_0)y + (x_1y_0-y_1x_0)$$
+		We assume $a>0$
+		\item For a point $(x,y)$\\
+		if $f(x,y)=0$, $(x,y)$ lies on the line.\\
+		if $f(x,y)<0$, $(x,y)$ lies upon the line.\\
+		if $f(x,y)>0$, $(x,y)$ lies below the line.
+		\item So we have to test $f(M)=a(x+1)+b(y+\frac{1}{2})+c=f(Former)+a+\frac{b}{2}$
+		\item Assum $a>0$, if $f(M) > 0$ choose $NE$ otherwise choose $E$
+		\item Update $f(Former)$:\\
+		If we choose $E$, $f(Former)=f(Former)+a$\\
+		If we choose $NE$, $f(Former)=f(Former)+a+b$\\
+		Note that:$a$ and $b$ are \textbf{constant integer}, so here is no \textbf{cumulative error issuse}
+	\end{itemize}
+	\item A harder problem: Triangles Rasterization\\
+	\textbf{Why Triangle}:
+	\begin{itemize}
+		\item Triangles (\textit{tris}) are a simple explicit 3D surface representation.
+		\item Convex and concave polygons (\textit{polys}) can be decomposed into triangles.
+		\item Tris are planar and unambiguously defined by three vertex(\textit{verts}) coordinates (\textit{coords}).
+	\end{itemize}
+	\textbf{Definition}: Find and draw \textbf{pixel} samples \textbf{inside} \textit{tri} edges and interpolate parameters defined at \textit{verts}
+	\item \textbf{Rasterizxation and Hidden Surface Removal(HSR) Algorithm Classes}:
+	\begin{itemize}
+		\item Image order rasterization: ray tracing/ ray casting \\
+		\underline{traverse} pixel, process each in world-space\\
+		\underline{transform} rays from image-space to world-space
+		\item Object order rasterization: scan-line / LEE \\
+		\underline{traverse} triangles, process each in image-space\\
+		\underline{transform} objects from model-space to image-space
+	\end{itemize}
+	\item \textbf{LEE Linear Expression Evaluation Algorithm}:
+	\begin{itemize}
+		\item We already discussed in \textit{Midpoint Line Algorithm} that how to determine a point is on the left(up) or right(below) the line, just \textit{a quick review here}:\\
+		Assume the lien have a positive $slope$\\
+		For an Edge Equation $E$, for point $(x,y)$: $E(x,y)=dY(x-X)-dX(y-Y)$\\
+		if $E(x,y)=0$, $(x,y)$ lies on the line.\\
+		if $E(x,y)<0$, $(x,y)$ lies right(below) the line.\\
+		if $E(x,y)>0$, $(x,y)$ lies left(up) the line.
+		\item For \textbf{Rasterization}:\\
+		Compute LEE result for all three edges.\\
+		Pixels with \textbf{consistent sign} for all three edges are inside the \textit{tri}.\\
+		Include \textbf{edge pixels} on left or right edges.
+	\end{itemize}
+\end{enumerate}
+
+\section{Class 4,5,6,7:Transformations}
+\begin{itemize}
+	\item Linear transformations (\textit{Xforms}) define a mapping of coordinates (\textit{coords}) in one coordinate frame to another.
+	$$V_b=X_{ba}V_a$$
+	\item \textbf{Homogeneous Vector} ($V$) is $4\times 1$ columns $(x,y,z,w)^T$
+	\item \textbf{Homogeneous Transforms} ($X$) is $4 \times 4$ matrix
+	\item From Homogeneous Vector to 3D Vector:
+	$$x=\frac{x}{w} , y=\frac{y}{w},z=\frac{z}{w}$$
+	\item \textbf{Why} we use Homogeneous Vector?\\
+	We want to uniform the transform matrix including translation, scaling, rotation in the same form of matrix.
+\end{itemize}
+\subsection{Transformation Matrix}
+\begin{enumerate}
+	\item \textbf{Translation}:
+	$$T(t_x,t_y,t_z)\Rightarrow 
+	\begin{bmatrix}
+	1 & 0 & 0 & t_x \\
+	0 & 1 & 0 & t_y \\
+	0 & 0 & 1 & t_z \\
+	0 & 0 & 0 & 1
+	\end{bmatrix},
+	T^{-1}(t_x,t_y,t_z)=T(-t_x,-t_y,-t_z)
+	$$
+	\item \textbf{Scaling}:
+	$$S(s_x,s_y,s_z)\Rightarrow 
+	\begin{bmatrix}
+	s_x & 0 & 0 & 0 \\
+	0 & s_y & 0 & 0 \\
+	0 & 0 & s_z & 0 \\
+	0 & 0 & 0 & 1
+	\end{bmatrix},
+	S^{-1}(s_x,s_y,s_z)=S(\frac{1}{s_x},\frac{1}{s_y},\frac{1}{s_z})
+	$$
+	\item \textbf{Rotation, CCW}:
+	$$R_x(\theta)\Rightarrow 
+	\begin{bmatrix}
+	1 & 0 & 0 & 0 \\
+	0 & cos\theta & -sin\theta & 0 \\
+	0 & sin\theta & cos\theta & 0 \\
+	0 & 0 & 0 & 1
+	\end{bmatrix},
+	R^{-1}_x(\theta)=R^T_x(\theta)
+	$$
+	$$R_y(\theta)\Rightarrow 
+	\begin{bmatrix}
+	cos\theta & 0 & sin\theta & 0 \\
+	0 & 1 & 0 & 0 \\
+	-sin\theta & 0 & cos\theta & 0 \\
+	0 & 0 & 0 & 1
+	\end{bmatrix},
+	R^{-1}_y(\theta)=R^T_y(\theta)
+	$$
+	$$R_z(\theta)\Rightarrow 
+	\begin{bmatrix}
+	cos\theta & -sin\theta & 0 & 0 \\
+	sin\theta & cos\theta & 0 & 0 \\
+	0 & 0 & 1 & 0 \\
+	0 & 0 & 0 & 1
+	\end{bmatrix},
+	R^{-1}_z(\theta)=R^T_z(\theta)
+	$$
+	\item Pitfall: \underline{commutative} property is for S,R only.\\
+	Here assume \textbf{uniform scaling} in all dimensions. \\
+	If S is not an uniform scaling matrix. S,R don't have commutative property.
+\end{enumerate}
+\subsection{Spaces Transformation}
+\begin{enumerate}
+	\item \textbf{NDC to Output Device}
+	$$X_{sp}\Rightarrow 
+	\begin{bmatrix}
+	\frac{xs}{2} & 0 & 0 & \frac{xs}{2} \\
+	0 & -\frac{ys}{2} & 0 & \frac{ys}{2} \\
+	0 & 0 & MAXINT & 0 \\
+	0 & 0 & 0 & 1
+	\end{bmatrix}
+	$$
+	Note that:\\
+	Output Device is \textbf{RH coords} and origin in \textbf{upper left}.$X\in [0,xs), Y\in [0,ys), Z\in [0,MAXINT]$\\
+	NDC is \textbf{LH coords} and origin at screen center. $X,Y \in [-1,1],Z \in[0,1]$
+	\item \textbf{Perspective Projection}
+	$$X_{pi}\Rightarrow 
+	\begin{bmatrix}
+	1 & 0 & 0 & 0 \\
+	0 & 1 & 0 & 0 \\
+	0 & 0 & \frac{1}{d} & 0 \\
+	0 & 0 & \frac{1}{d} & 1
+	\end{bmatrix}
+	$$
+	\textbf{What} is $d$ And \textbf{Why} there are two \textbf{$\frac{1}{d}$}?
+	\begin{itemize}
+		\item Assume camera is on $(0,0,-d)$, perspective(also image) plane is $z=0$, a object in world space is $(X,Y,Z)$
+		\item Defined FOV(field of view) as the angle the camera can see.
+		\item Note: $X\in [-1,1]$, so the distant($d$) from Forcus point to view plane can be calculate by this equation:
+		$$\frac{1}{d}=tan(\frac{FOV}{2})$$
+		\item Futher More: The object project to view plane can be calculate by these equations:
+		$$\frac{X}{Z+d}=\frac{x}{d} \Rightarrow x=\frac{X}{\frac{Z}{d}+1}$$
+		$$\frac{Y}{Z+d}=\frac{y}{d} \Rightarrow y=\frac{Y}{\frac{Z}{d}+1}$$
+		$$\frac{Z}{Z+d}=\frac{z}{d} \Rightarrow z=\frac{Z}{\frac{Z}{d}+1}$$
+		$$(x,y,z)=(\frac{X}{\frac{Z}{d}+1},\frac{Y}{\frac{Z}{d}+1},\frac{Z}{\frac{Z}{d}+1})$$
+		\item Write this 3D vector to Homogeneous Vector:
+		$$(x,y,z,w)=(X,Y,Z,\frac{Z}{d}+1)$$
+		\item Futher: We forcus on the \textbf{range} of Z now is $z\in (-\infty,d)$.\\
+		But in NDC we hope $z \in [0,1)$ So:\\
+		We delete all vector that $Z<0$, because they cannot project to the view plane.\\
+		For $z>=0$, we define $z'=\frac{z}{d}$
+		\item $(x,y,z',w)=(X,Y,\frac{Z}{d},\frac{Z}{d}+1)=X_{pi}*(X,Y,Z,1)$
+	\end{itemize}
+	\textbf{Pitfall}: \textbf{Do Z interpolation in Perspective Plane!}\\
+	\textbf{Why} we need the farest plane?\\
+	Asymptotic curve of $Z$ $vs.$ $z$, that z increase slower when Z is large.\\
+	It might map different $Z$ to the same $z$
+\end{enumerate}
+\subsection{Camera Matrix}
+\begin{enumerate}
+	\item Assume camera position is $c$, camera look-at point is $l$, here $c$ and $l$ are both in world coordinate. And the world up vector is $\vec{up}$
+	\item Camera Z-axis \textbf{in world coordinate} is $$\vec{Z}=\frac{\vec{cl}}{||\vec{cl}||}$$
+	\item Camera Y-axis \textbf{in world coordinate} is the orthogonal(vertical) part of world-up vector to Z-axis which is $$\vec{up'}=\vec{up}-(\vec{up}\cdot \vec{Z})\vec{Z}$$
+	$$\vec{Y}=\frac{\vec{up'}}{||\vec{up'}||}$$
+	\item Camera X-axis \textbf{in world coordinate} is orthogonal to both Y and Z axises. So:
+	$$\vec{X}=\vec{Y}\times\vec{Z}$$
+	\item Build the $X_{wi}$ from camera space to world space:\\
+	X-axis vector $[1,0,0]$ in camera space should be $\vec{X}$ in world space, also for Y,Z-axis vectors, So:
+	$$X_{wi}\Rightarrow 
+	\begin{bmatrix}
+	X_x & Y_x & Z_x & 0 \\
+	X_y & Y_y & Z_y & 0 \\
+	X_z & Y_z & Z_z & 0 \\
+	0 & 0 & 0 & 1
+	\end{bmatrix}
+	$$
+	\item Also we need to add the translation of the camera to the Matrix:
+	$$X_{wi}\Rightarrow 
+	\begin{bmatrix}
+	X_x & Y_x & Z_x & c_x \\
+	X_y & Y_y & Z_y & c_y \\
+	X_z & Y_z & Z_z & c_z \\
+	0 & 0 & 0 & 1
+	\end{bmatrix}
+	$$
+	\item Now we can get the inverst matrix $X_{iw}$:
+	$$X_{iw}\Rightarrow 
+	\begin{bmatrix}
+	X_x & X_y & X_z & -X\cdot c \\
+	Y_x & Y_y & Y_z & -Y\cdot c \\
+	Z_x & Z_y & Z_z & -Z\cdot c \\
+	0 & 0 & 0 & 1
+	\end{bmatrix}
+	$$
+	\item In this proof we know that: If we know the X,Y,Z-axis in world coordinate for a specific space, we can easily build and inverst the translation from or to that space.\\
+	This method can also be used to \textbf{proof the general rotation matrix}. 
+	\item Orbit a Model about a Point\\
+	The idea is the same as place camera.\\
+	Need to care about \textbf{which space} you current in!
+\end{enumerate}
 \end{document}
