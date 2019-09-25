@@ -85,6 +85,51 @@
 		Compute LEE result for all three edges.\\
 		Pixels with \textbf{consistent sign} for all three edges are inside the \textit{tri}.\\
 		Include \textbf{edge pixels} on left or right edges.
+		\item LEE need to check every pixel in the bounding box.
+		\item LEE is very good in parallel(SIMD) system.
+		\item Furthermore: Given 3 random \textit{verts} how to find CW edge cycle\\
+		Determine L/R and Top/Bot edges for edge-pixel ownership
+	\end{itemize}
+	\item \textbf{Scan Line Rasterizer}:
+	\begin{itemize}
+		\item Sort vets by Y
+		\item Setup edge DDAs for edges
+		\item Sort edges by L or R(The long edge on left or right)
+		\item Start from Top Vertice, and switch DDA when hit the middle vertice.		
+	\end{itemize}
+	\item \textbf{Interpolate Z}:\\
+	A general 3D plane equation has 4 terms: $Ax+By+Cz+D=0$\\
+	$(A,B,C)$ is the normal of that plane, so $(X,Y,Z)_0 \times (X,Y,Z)_1 = (A,B,C)$\\
+	Then plug any vertex coord into equation and solve for $D$.\\
+	Given $(A,B,C,D)$ and any point $(x,y)$ can solve $z$
+	\item \textbf{Used $Z$-buffer to remove hidden surfaces}\\
+	Initial $Z$-buffer to MAXINT at the begining of every frame\\
+	Interpolate vertex $Z$ values to get $Z_{pix}$\\
+	Only write new pixel to the buffer if $Z_{pix}<Z_{buffer}$\\
+	Notice that $Z$ should always \textbf{bigger or equal to zero!}
+	\item Hidden Line Removal(HLR):\\
+	Simple z-buffer does not work when the render only draws edge(outlines of polygons).\\
+	Need edge-crossing and object sorting methods.
+	\item \textbf{Painter's Algorithm}: render in order front to back\\
+	A object is in front of another object means:\\
+	Z of all verts of one object is less than the other.\\
+	This algorithm not work if Z-sort is ambiguous.
+	\item \textbf{Warnock Algorithm}:\\
+	Subdivide screen untril a leaf region has a simple front/back relationship.\\
+	Leaf regions have one or zero surfaces visible, and the smallest region is usually a pixel\\
+	Usually use quad tree subdivision
+	\item \textbf{BSP-Tree}:\\
+	View-Independent binary tree(pre-calculated) allows a view-dependent front-to-back or back-to-front traversal of surfaces.\\
+	Use Painter Algorithm to do back-to-front traversal.\\
+	Useful for \textbf{transparency} - full depth-sort of all surface.
+	\item \textbf{Culling}:
+	\begin{itemize}
+		\item Culling with portals: pre-compute the invisible part.
+		\item Culling by View Frustum: Skip a triangle iff all its vertices are beyond \textbf{the same screen edge}!\\
+		\textbf{Pitfall:} If the vertices are beyond different edge, some part of the \textit{tri} might still in the screen. Image a giant \textit{tri} that cover the whole screen.
+		\item Backface Culling: For \textbf{closed(water-tight)} objects, surfaces with \textbf{oriented-normals facing away} from the camera are never visible.\\
+		\textbf{Pitfall}: BF Culling only work for water-tight object!
+		\item Frustum: Only visible triangles are drawn into the frame buffer.
 	\end{itemize}
 \end{enumerate}
 
