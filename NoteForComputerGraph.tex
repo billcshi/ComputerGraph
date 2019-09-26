@@ -1,8 +1,8 @@
-\documentclass[cyan,normal,en]{elegantnote}
+\documentclass[geye,cyan,normal,en]{elegantnote}
 
 \title{Computer Graphic Note}
 \author{Jiechang Shi}
-\version{1.00}
+\version{1.1}
 \date{\today}
 
 \begin{document}
@@ -286,5 +286,36 @@
 	\item Orbit a Model about a Point\\
 	The idea is the same as place camera.\\
 	Need to care about \textbf{which space} you current in!
+\end{enumerate}
+\section{HW4 Lighting and Shading Implementation}
+\begin{enumerate}
+	\item $\vec{L}$ denotes the direction to a infinity-far point-light source
+	\item $\vec{E}$ denotes the camera direction \\
+	If camera is far away, $\vec{E}$ is constant(In HW4.)\\
+	We need to recomputed $\vec{E}$ if the camera is closed to the scene.
+	\item $\vec{N}$ is specified at triangle vertices.
+	\item $\vec{R}$ must be computed for each lighting calculation (at \textbf{a point}).\\
+	Calculation of $\vec{R}$:\\
+	$$\vec{R}=2(\vec{N}\cdot \vec{L})\vec{N}-\vec{L}$$\\
+	Avoiding sqrt-root in this calculation
+	\item Choosing a Shading Space: Wee need all $\vec{L},\vec{E},\vec{N},\vec{R}$ in some affine(pre-perspective) space \\
+	Suggest use \textbf{Image Space} for HW4. \\
+	\textbf{Model space} is also a reasonable choice since Normal vectors are already in that space. This is most \textbf{efficient}!
+	\item \textbf{Image Space Lighting (ISL)}\\
+	Create a Transformation stack from model space to image space.\\
+	Need to \textbf{normalized the Scale and delete translation} for each matrix, \textbf{only maintain the rotation}, before push into this stack!
+	\item \textbf{Check} the sign of \textbf{$\vec{N}\cdot\vec{E}$} and \textbf{$\vec{N}\cdot\vec{L}$}:\\
+	Both positive: Compute lighting model.\\
+	Both negative: \textbf{Flip normal($\vec{N}$)} and compute lighting model.\\
+	Different sign: Skip it.
+	\item \textbf{Check} the sign of \textbf{$\vec{R}\cdot\vec{E}$}: If negative, set to 0.
+	\item \textbf{Check} color overflow($>1.0$): Set to 1.
+	\item \textbf{Compute Color} at all pixels:\\
+	\textbf{Per Face} - flat shading\\
+	\textbf{Per Vertex} - interpolate vertex colors, Gouraud Shading(specular highlights are undersampled, aliased).\\
+	\textbf{Per Pixel} - interpolate normals, Phong Shading (Expensive computation, but better sampling)\\
+	Set \textbf{Shading Modes Parameter} for different lighting calculation.
+	\item \textbf{Pitfall} in \textbf{Phong} Interpolation:\\
+	Need to \textbf{normalize} the interpolation normal vector.
 \end{enumerate}
 \end{document}
