@@ -318,4 +318,23 @@
 	\item \textbf{Pitfall} in \textbf{Phong} Interpolation:\\
 	Need to \textbf{normalize} the interpolation normal vector.
 \end{enumerate}
+\section{Class10: More About Shading}
+\begin{enumerate}
+	\item Non-Uniform Scaling: \\
+	We break the connectiong between normal vector with the surface\\
+	Matrix $Q$ for Non-Uniform Scaling
+	\item Model Space Lighting(MSL): \\
+	Only need to transform Global lighting parameters once per models
+	\item Other Shading Model
+	\item BRDF Definition: \\
+	Bidirectional reflectance distribution function
+	\item Semi-Local Shading
+\end{enumerate}
+\section{Class 10:Interpolation of screen}
+\begin{enumerate}
+	\item Checkerboard Example: Using Linear Interpolation for $u\&v$ is also wrong!\\
+	Need to do perspective Interpolation for $u\&v$ 
+	\item Color and Normal Interpolation:\\
+	Colors and Norms are not transform to perspective-space where depth-$z$ is interpolation
+\end{enumerate}
 \end{document}
