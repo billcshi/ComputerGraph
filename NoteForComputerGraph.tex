@@ -21,7 +21,7 @@
 		\item Z Value: For solving the hidden-surface removal(HSR) problem
 	\end{itemize}
 \end{enumerate}
-
+\newpage
 \section{Class 2,3: Rasterization}
 \begin{enumerate}
 	\item For each pixel on screen, the sample point of that pixel is the center point of that pixel, which have \textbf{integer} coordinates. For examples, $(3,2)$.
@@ -132,7 +132,7 @@
 		\item Frustum: Only visible triangles are drawn into the frame buffer.
 	\end{itemize}
 \end{enumerate}
-
+\newpage
 \section{Class 4,5,6,7:Transformations}
 \begin{itemize}
 	\item Linear transformations (\textit{Xforms}) define a mapping of coordinates (\textit{coords}) in one coordinate frame to another.
@@ -287,54 +287,147 @@
 	The idea is the same as place camera.\\
 	Need to care about \textbf{which space} you current in!
 \end{enumerate}
-\section{HW4 Lighting and Shading Implementation}
+\newpage
+
+\section{Class8-10 Illumination and Shading}
 \begin{enumerate}
-	\item $\vec{L}$ denotes the direction to a infinity-far point-light source
-	\item $\vec{E}$ denotes the camera direction \\
-	If camera is far away, $\vec{E}$ is constant(In HW4.)\\
-	We need to recomputed $\vec{E}$ if the camera is closed to the scene.
-	\item $\vec{N}$ is specified at triangle vertices.
-	\item $\vec{R}$ must be computed for each lighting calculation (at \textbf{a point}).\\
-	Calculation of $\vec{R}$:\\
-	$$\vec{R}=2(\vec{N}\cdot \vec{L})\vec{N}-\vec{L}$$\\
-	Avoiding sqrt-root in this calculation
-	\item Choosing a Shading Space: Wee need all $\vec{L},\vec{E},\vec{N},\vec{R}$ in some affine(pre-perspective) space \\
-	Suggest use \textbf{Image Space} for HW4. \\
-	\textbf{Model space} is also a reasonable choice since Normal vectors are already in that space. This is most \textbf{efficient}!
-	\item \textbf{Image Space Lighting (ISL)}\\
-	Create a Transformation stack from model space to image space.\\
-	Need to \textbf{normalized the Scale and delete translation} for each matrix, \textbf{only maintain the rotation}, before push into this stack!
-	\item \textbf{Check} the sign of \textbf{$\vec{N}\cdot\vec{E}$} and \textbf{$\vec{N}\cdot\vec{L}$}:\\
-	Both positive: Compute lighting model.\\
-	Both negative: \textbf{Flip normal($\vec{N}$)} and compute lighting model.\\
-	Different sign: Skip it.
-	\item \textbf{Check} the sign of \textbf{$\vec{R}\cdot\vec{E}$}: If negative, set to 0.
-	\item \textbf{Check} color overflow($>1.0$): Set to 1.
-	\item \textbf{Compute Color} at all pixels:\\
-	\textbf{Per Face} - flat shading\\
-	\textbf{Per Vertex} - interpolate vertex colors, Gouraud Shading(specular highlights are undersampled, aliased).\\
-	\textbf{Per Pixel} - interpolate normals, Phong Shading (Expensive computation, but better sampling)\\
-	Set \textbf{Shading Modes Parameter} for different lighting calculation.
-	\item \textbf{Pitfall} in \textbf{Phong} Interpolation:\\
-	Need to \textbf{normalize} the interpolation normal vector.
+	\item Global vs. Local Illumination\\
+	Global: Models indirect illumination and occlusions
+	Local: Only models direct illumination
+	\item Irradiance
+	$$E=\int_{\Omega} I(x,\omega) cos \theta dx$$
+	Note: $I(x,\omega)$ is the light intensity arriving from all directions and entering the hemisphere $\Omega$ over unit serface area.\\
+	Also we only care the vertical(normal) part of the light, we dismiss all lights parallel to the surface by using $\cos \theta$
+	\item Simplified lighting:\\
+	Assume all lights are distant-point light.
+	\begin{itemize}
+		\item Source have \textbf{uniform} intensity distribution
+		\item Neglect distance fallout
+		\item Direction to source is constant within scene
+		\item Using 2 parameters to define a light:\\
+		$direction(x,y,z)$ vector from surface to light source\\
+		$intensity(r,g,b)$ of the light
+	\end{itemize}
+	\item specular reflection and diffuse reflection
+	\begin{itemize}
+		\item Color shift by attenuation of RPG components for all reflection
+		\item Specular Reflection Model(View-Dependent):\\
+		$$L_j(V) = L_e \cdot K_s \cdot (V\cdot R)^{spec}$$
+		$$R=2(N\cdot L)N-L$$
+		Note: $V$ and $R$ should be normalized.\\
+		Direction: Reflection occurs mainly in the "mirror" R direction, but there is some spread in similar directions $V$.\\
+		$spec$ controls the distribution of intensity about R. Higher value of $spec$ make the surface smoother\\
+		$K_s$ controls the color attenuation of Surface.
+		\item Diffuse Reflection Models(View-Independent):\\
+		$$L_j = L_e \cdot K_d (L\cdot N)$$
+		Direction: All \textbf{output} directions are the same. But we only care vertical \textbf{input} light.\\
+		$L$ and $N$ should be normalized.\\
+		$K_d$ is the surtface attenuation component.
+		\item Ambient Light\\
+		$$L_j = L_a \cdot K_a$$
+		Direction: All input and output directions are the same.\\
+		Only one ambient light is needed and allowed.
+		\item Complete Shading Equation:
+		$$Color=(K_s\sum{ L_e \cdot (V\cdot R)^{spec}}) + (K_d\sum{ L_e \cdot (L\cdot N)}) + (L_a \cdot K_a)$$	
+	\end{itemize}
+	\item Detail about HW4(Lighting Implementation)
+	\begin{itemize}
+		\item $\vec{L}$ denotes the direction to a infinity-far point-light source
+		\item $\vec{E}$ denotes the camera direction. If camera is far away, $\vec{E}$ is constant(In HW4.)
+		\item $\vec{N}$ is specified at triangle vertices.
+		\item $\vec{R}$ must be computed for each lighting calculation (at \textbf{a point}).\\
+		Calculation of $\vec{R}$:\\
+		$$\vec{R}=2(\vec{N}\cdot \vec{L})\vec{N}-\vec{L}$$\\
+		Avoiding sqrt-root in this calculation
+		\item Choosing a Shading Space: Wee need all $\vec{L},\vec{E},\vec{N},\vec{R}$ in some affine(pre-perspective) space \\
+		Suggest use \textbf{Image Space} for HW4. \\
+		\textbf{Model space} is also a reasonable choice since Normal vectors are already in that space. This is most \textbf{efficient}!
+		\item \textbf{Image Space Lighting (ISL)}\\
+		Create a Transformation stack from model space to image space.\\
+		Need to \textbf{normalized the Scale and delete translation} for each matrix, \textbf{only maintain the rotation}, before push into this stack!
+		\item \textbf{Check} the sign of \textbf{$\vec{N}\cdot\vec{E}$} and \textbf{$\vec{N}\cdot\vec{L}$}:\\
+		Both positive: Compute lighting model.\\
+		Both negative: \textbf{Flip normal($\vec{N}$)} and compute lighting model.\\
+		Different sign: Skip it.
+		\item \textbf{Check} the sign of \textbf{$\vec{R}\cdot\vec{E}$}: If negative, set to 0.
+		\item \textbf{Check} color overflow($>1.0$): Set to 1.
+		\item \textbf{Compute Color} at all pixels:\\
+		\textbf{Per Face} - flat shading\\
+		\textbf{Per Vertex} - interpolate vertex colors, Gouraud Shading(specular highlights are undersampled, aliased).\\
+		\textbf{Per Pixel} - interpolate normals, Phong Shading (Expensive computation, but better sampling)\\
+		Set \textbf{Shading Modes Parameter} for different lighting calculation.
+		\item \textbf{Pitfall} in \textbf{Phong} Interpolation:\\
+		Need to \textbf{normalize} the interpolation normal vector.
+	\end{itemize}
 \end{enumerate}
-\section{Class10: More About Shading}
+\subsection{Class10: Something More About Shading}
 \begin{enumerate}
 	\item Non-Uniform Scaling: \\
-	We break the connectiong between normal vector with the surface\\
-	Matrix $Q$ for Non-Uniform Scaling
+	\textbf{A non-uniform scaling alters the relationship between the surface orientation and the Normal Vector.}\\
+	So we \textbf{cannot} use the same matrix M for transformation of the Normals and the vertex coordinates.\\
+	We can fix this by using a different transformation $Q=f(M)$ for transforming the Normals.
+	\item How to create a matrix for Normals:\\
+	In HW4, We create a matrix \textbf{dismiss all} scale matrix.\\
+	For Detail:\\
+	As the definition of Normals: 
+	$$\vec{N}^T\cdot\vec{P}=0$$
+	After include the transform matrix: 
+	$$(Q\vec{N})^T\cdot(M\vec{P})=0$$
+	By Definition of Matrix Multiplyer:
+	$$\vec{N}^T \cdot Q^T \cdot M \cdot \vec{P}=0$$
+	Since we already know $\vec{N}^T\cdot\vec{P}=0$ we only need the inner part equal to identity matrix:
+	$$Q^T \cdot M= I,Q=(M^{-1})^T$$
+	Note that: If we only used uniform scaling: $S=I$ after normalization.\\
+	If we compute $Q$ for each $M$ pushed on the $X_{im}$ transform stack, the resulting $X_n$ stack has $Q$ and therefore allows non-uniform scaling.	
 	\item Model Space Lighting(MSL): \\
-	Only need to transform Global lighting parameters once per models
-	\item Other Shading Model
-	\item BRDF Definition: \\
-	Bidirectional reflectance distribution function
-	\item Semi-Local Shading
+	Only need to transform Global lighting parameters once per models.\\
+	Also need to transform Eye/camera direction into model space.
 \end{enumerate}
-\section{Class 10:Interpolation of screen}
+\newpage
+
+\section{Class 11-13: Texture Mapping}
+\subsection{Screen-Space Parameter Interpolation}
 \begin{enumerate}
-	\item Checkerboard Example: Using Linear Interpolation for $u\&v$ is also wrong!\\
-	Need to do perspective Interpolation for $u\&v$ 
-	\item Color and Normal Interpolation:\\
-	Colors and Norms are not transform to perspective-space where depth-$z$ is interpolation
+	\item In Z-buffer interpolation, we know that linear interpolation for $z$ is \textbf{wrong in image space}, we need to interpolate in \textbf{perspective space}.
+	\item Accurate interpolation of RGB color or Normal vectors should also take perspective into account.\\
+	But we can ignore the color and normal interpolation error.
+	\item Interpolation for \textbf{Texture Function}: checkerboard Example: Using Linear Interpolation for $u\&v$ is also wrong!
+	\item How to compute perspective-correct interpolation of $u,v$ at each pixel.
+	\begin{itemize}
+		\item For each parameter $P$, we used $P^s$ to denote the value in perspective space.
+		\item Note that: For Z interpolation $V_z^s=\frac{V_z}{\frac{V_z}{d}+1}=\frac{V_z \cdot d}{V_z+d}$
+		\item Rescale $V_z^s$ to $V_z^s \in [0,Z_{max}]$ 
+		$$V_z^s=\frac{V_z \cdot d}{V_z+d} \cdot (\frac{Z_{max}}{d})=\frac{V_z \cdot Z_{max}}{V_z+d}$$
+		\item We can also get the invert equation:
+		$$V_z=\frac{V_z^s \cdot d}{Z_{max} - V_z^s}$$
+		\item For parameter from image space to perspective space:
+		$$P^s=\frac{P}{\frac{V_z}{d}+1}=\frac{Pd}{V_z+d}$$
+		\item Also we can get inver equation:
+		$$P=\frac{P^s(V_z+d)}{d}$$
+		\item We don't have $V_z$ but we already calculated $V_z^s$ in HW2, so we can used that:
+		$$P^s=\frac{P}{(\frac{V_z^s}{Z_{max} - V_z^s}+1)}$$
+		$$P=P^s \cdot \frac{V_z^s}{Z_{max} - V_z^s}+1$$
+		\item Note that we only have $V_z^s$ and $Z_{max}$ in this equation that we already know the value, we don't need to care $d$ and some other parameter.
+		\item We used $V_z' = \frac{V_z^s}{Z_{max} - V_z^s}$ to simplify the equation:
+		$$P^s=\frac{P}{V_z' +1}$$
+		$$P=P^s \cdot(V_z'+1)$$
+	\end{itemize}
+	\item The Step for Parameter interpolation:\\
+	Get $V_z^p$ for each vertex.\\
+	Transform $P$ to perspective space $P^s$ for each vertex.\\
+	Interpolate $V_z^p$ for each pixel.\\
+	Interpolate $P^s$ for each pixel. \\
+	Transform $P^z$ back to $P$ by using $V_z^p$ for each pixel.
+\end{enumerate}
+\newpage
+\subsection{Texture}
+\begin{enumerate}
+	\item Scale $u,v$ to Texture Image Size:\\
+	$(u,v)$ coords range over $[0,1]$\\
+	2D Image is a pixel array of $xs-1,ys-1$\\
+	But $u*(xs-1)$ might not be Integer so we need to interpolate the color for non-Integer $(u,v)$ coordinate from nearest 4 Integer point.
+	$$Color(p)=(1-s)(1-t)A+s(1-t)B+stC+(1-s)tD$$
+	\item For Phong Shading, using texture function $f(u,v)$ to replace $k_d$ and $k_a$
+	\item For Gouraud Shading, using $f(u,v)$ to replace all $k_s$, $k_d$ and $k_a$
 \end{enumerate}
 \end{document}
