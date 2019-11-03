@@ -429,5 +429,39 @@
 	$$Color(p)=(1-s)(1-t)A+s(1-t)B+stC+(1-s)tD$$
 	\item For Phong Shading, using texture function $f(u,v)$ to replace $k_d$ and $k_a$
 	\item For Gouraud Shading, using $f(u,v)$ to replace all $k_s$, $k_d$ and $k_a$
+	\item Procedural Texture
+	\item Bump Texture: Alter normals at each pixel to create bump.
+	\item Noise Texture: 3D Noise Volume, Tubulence
+	\item Evironment(Reflection) Mapping: Cube Map\\
+	Problems: Sampling problems and high curvature problems
+\end{enumerate}
+\subsection{Implementation Of Texutre(HW5)}
+\begin{enumerate}
+	\item Step1: Texture coordinates: surface point $\rightarrow$ $(u,v)$\\
+	Input: vertex in image space\\
+	Output: $(u,v)$
+	\item Step2: $(u,v)$ $\rightarrow$ RGB color\\
+	Input: $(u,v)$
+	Output: RGB color from image LUT
+	\item Interpolation of $(u,v)$ need to be in perspective space.
+	\item Interpolation of 4-corner for non-Integer $(u,v)$ is needed.
+\end{enumerate}
+\newpage
+
+\section{Class14-15 Antialiasing}
+\subsection{The Source of Aliasing}
+\begin{enumerate}
+	\item Quantization error arise from insufficient accuracy of sample
+	\item Aliasing error arise from insufficient samples
+	\item Nyquist Theorem: Sample at least twice the rate of highest frequency present in the signal.\\
+	f(t) filtered for cutoff freq $\omega_F$(Remove high frequencies before sampling)\\
+	Sample Rate $\frac{1}{T_0}$ is greater than $2\omega_F$\\
+	Reconsturct(interpolate) with $sinc$ function
+	\item Solution: Band-limit the input signal before sampling.
+\end{enumerate}
+\subsection{Implement Antialiasing(HW6)}
+\begin{enumerate}
+	\item Antialiasing by jitter supersampling
+	\item Sample a pixel several with different center and weight
 \end{enumerate}
 \end{document}
