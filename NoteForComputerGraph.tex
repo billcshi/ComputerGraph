@@ -431,9 +431,46 @@
 	\item For Gouraud Shading, using $f(u,v)$ to replace all $k_s$, $k_d$ and $k_a$
 	\item Procedural Texture
 	\item Bump Texture: Alter normals at each pixel to create bump.
-	\item Noise Texture: 3D Noise Volume, Tubulence
-	\item Evironment(Reflection) Mapping: Cube Map\\
-	Problems: Sampling problems and high curvature problems
+	\item Noise Texture:
+	\begin{itemize}
+		\item Perlin Noise:(Ref(Chinese): \href{https://www.cnblogs.com/leoin2012/p/7218033.html}{https://www.cnblogs.com/leoin2012/p/7218033.html}
+		\item Input: $(x,y,z)$ for 3D and $(u,v)$ in 2D
+		\item Output: double value between 0 and 1
+		\item We have 2 Pseudo Random Grid for each Integer Point(x,y,z are integers):
+		\begin{itemize}
+			\item Noise Matrix($d$): The color of Point for noise
+			\item Gradient Matrix($g$): A random unit vector for each Point
+		\end{itemize}
+		\item For each input vector$(u,v)$, if $(u,v)$ isn't Integer, we found 4-corners Integer Point: $(i,j),(i+1,j),(i,j+1),(i+1,j+1)$
+		\item For each Integer Point, we use \textbf{dot product} of distant vector(from $(u,v)$ to Integer Point) and gradient vector to get the noise value.
+		\item In perlin noise every interpolation is in 1-D. So 2-D need first interpolate y-axis(twice) and then interpolate x-axis. 3-D need 7 interpolation.
+		We used linear-interpolation in slides but we can use \textbf{Fade} function(easy curves) for better interpolation.
+		\item Turbulence: Sum noise with diminishing ampitude:
+		$$turbulence(x)=\sum_{k}^{i=0} \frac{1}{2^i}|noise(2^i x)|$$
+	\end{itemize}
+	\item Evironment(Reflection) Mapping:
+	\begin{itemize}
+		\item Basic Idea: During rendering, compute the reflection of Eye vector(not the light vector)
+		\item \textbf{Ignore the position of surface point} in scene. We assume all points are on center point of the scene.
+		\item Light and scenery are all merge into environment texture.
+		\item No object inter-reflection or shadow
+		\item Blur texture to simulate diffuse reflection
+		\item Sharp texture to simulate specular reflection
+	\end{itemize}
+	\item Cube Map:
+	\begin{itemize}
+		\item Transform each Eye reflection vector R back to world space
+		\item Find Max component: indicated which face of cube it would intersect
+		\item Compute intersection of R with cube face:\\
+		Move all Reflection ray tail to center of cube.
+		Rescale the max component(for example$y$) of vector R to 1.0.\\
+		The other 2 component($x,z$) indicate the texture-pixel.
+	\end{itemize}
+	\item Refraction Map:
+	\begin{itemize}
+		\item Use Snell's law to compute refraction vector
+		\item Color aberration simulated with $f(\lambda)$ refraction angle for multiple color bands
+	\end{itemize}
 \end{enumerate}
 \subsection{Implementation Of Texutre(HW5)}
 \begin{enumerate}
@@ -463,5 +500,27 @@
 \begin{enumerate}
 	\item Antialiasing by jitter supersampling
 	\item Sample a pixel several with different center and weight
+\end{enumerate}
+\newpage
+
+\section{Final Exam Review}
+\begin{enumerate}
+	\item Shading Equation:
+	$$Color=(K_s\sum{ L_e \cdot (E\cdot R)^{spec}}) + (K_d\sum{ L_e \cdot (L\cdot N)}) + (L_a \cdot K_a)$$
+	Know the meaning for every terms:
+	\begin{itemize}
+		\item $K_s,K_a,K_d$
+		\item $L_e,L_a$
+		\item $s$
+		\item $N,L,R,E$
+		\item Equation1: $R=2(N\cdot L) N-L$
+	\end{itemize}
+	\item Shading Mode:(Flat, Gouraud, Phong)
+	\item Texture
+	\item Calculate the normal: With Non-translate and Non-scale Matrix To Image Space
+	\item Other Topic:
+	\begin{itemize}
+		\item Enviroment Shading 
+	\end{itemize}
 \end{enumerate}
 \end{document}
