@@ -485,7 +485,7 @@
 \end{enumerate}
 \newpage
 
-\section{Class14-15 Antialiasing}
+\section{Class14-16 Antialiasing}
 \subsection{The Source of Aliasing}
 \begin{enumerate}
 	\item Quantization error arise from insufficient accuracy of sample
@@ -500,6 +500,26 @@
 \begin{enumerate}
 	\item Antialiasing by jitter supersampling
 	\item Sample a pixel several with different center and weight
+\end{enumerate}
+\subsection{Texture Antialiasing}
+\begin{enumerate}
+	\item Sample Rate Mismatch: Texture sampling rate generally does not match screen pixel sample rate (Texel:Pixel ratio)
+	\item Projected texture in screen image should sample near same rate(1:1) to texture map.\\
+	1 Texel: Many Pixel: No aliasing problem, But blur. Fix by using higher resolution textures.\\
+	1 Pixel: Many Texel: Aliasing problem. Fix by sample rate is twice highest freq in texture.
+	\item Mip Map: Pre-compute filtered version of texture image at octave scale/size intervals.\\
+	Using average color of $2 \times 2$ texels.\\
+	The space cost is only $33\%$ more.\\
+	Scale for each level of Mip Map:
+	$$Scale=\frac{dU}{dX}=\frac{dV}{dY}$$
+	Pixel Scale is more complex since it is non-axis-aligned(after rotation and projection):
+	$$PixelScale=(\frac{dU}{dX},\frac{dU}{dY},\frac{dV}{dX},\frac{dV}{dY})$$
+	An approach to match Scale and PixelScale is choosing the highest PixelScale component.(Blur is better than aliasing!)
+	\item 3D Interpolation: If the Pixel Scale is between 2 Texel Scales, we need to interpolate between 2 texture samples.
+	\item Anisotropic Interpolation: Combine more than $2 \times 2$ pixel in each texture samples.
+	\item Summed-Area Table(SAT):Compute a texture table T so that each texel has sum of \textbf{all texels above and left}\\
+	SAT provide an approximation approach to get the avagerage color in O(1).\\
+	Note that: the texels sample might not be axis-aligned since	 the pixel to texel projection. But the different is strictly less than $\frac{1}{2}$.
 \end{enumerate}
 \newpage
 
