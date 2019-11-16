@@ -1,4 +1,4 @@
-\documentclass[geye,cyan,normal,en]{elegantnote}
+\documentclass[cyan,normal,en]{elegantnote}
 
 \title{Computer Graphic Note}
 \author{Jiechang Shi}
@@ -430,7 +430,14 @@
 	\item For Phong Shading, using texture function $f(u,v)$ to replace $k_d$ and $k_a$
 	\item For Gouraud Shading, using $f(u,v)$ to replace all $k_s$, $k_d$ and $k_a$
 	\item Procedural Texture
-	\item Bump Texture: Alter normals at each pixel to create bump.
+	\item Bump Texture:
+	\begin{itemize}
+		\item Alter normals at each pixel to create bump.
+		\item Normal Perturbation($\vec{P}$): $N'=N+P$, $\vec{P}$ should be in the same space as N. But $\vec{P}$ should not be in model space.
+		\item Better spaces for $\vec{P}$ are Surface Coordinates, Tangent Space.
+	\end{itemize}
+	\item Surface Coordinates:
+	\item Normal Space encodes the surface normal rather than perturbation.
 	\item Noise Texture:
 	\begin{itemize}
 		\item Perlin Noise:(Ref(Chinese): \href{https://www.cnblogs.com/leoin2012/p/7218033.html}{https://www.cnblogs.com/leoin2012/p/7218033.html}
@@ -543,4 +550,122 @@
 		\item Enviroment Shading 
 	\end{itemize}
 \end{enumerate}
+\newpage
+
+\section{BRDF}
+
+Reference for this section(In Chinese): \href{https://blog.csdn.net/yjr3426619/article/details/81098626}{https://blog.csdn.net/yjr3426619/article/details/81098626}
+\subsection{What is BRDF}
+\begin{itemize}
+	\item Basic Idea of BRDF: The reflect rate for a surface is based on input vector and camera vector.
+	$$f(l,v)=\frac{dL_0(v)}{dE}(ForNonPointLight)=\frac{L_o(v)}{E_L cos\theta_i}(ForPointLight)$$
+	\begin{itemize}
+		\item $l$: input light vector
+		\item $v$: camera vector
+		\item $L_0$: Output Radiance(Color)
+		\item $E_l$: Input Irradiance(Color*$\pi$ in Unity)
+		\item $\theta_i$: angle between input vector and surface normal
+	\end{itemize}
+	\item Properties of $f(l,v)$
+	\begin{itemize}
+		\item $f(l,v)\geq 0$
+		\item $f(l,v)=f(v,l)$
+		\item $R(l)=\int_\phi f(l,v) cos\theta_0 d\omega \leq 1$, Discussed later
+	\end{itemize}
+	\item How to calculate color based on BRDF:
+	\begin{itemize}
+		\item In Point Light, Point Camera:
+		$$L_0(v)=\sum_k f(l_k)\times E_l cos\theta_{ik}$$
+	\end{itemize}
+	\item Directional-hemispherical reflectance:
+	\begin{itemize}
+		\item Definition:
+		$$R(l)=\int_\phi f(l,v) cos\theta_0 d\omega$$
+		\begin{itemize}
+			\item $\phi$ is the hemispherical in surface normal half
+			\item $\theta_0$ is the angel between camera view and surface normal
+			\item $\omega$ is the space angle
+		\end{itemize}
+		\item Basically, $R(l)$ is \textbf{the sum of the (directional) energy} of all output light in hemisphere.
+		\item The output energy \textbf{should be equal or less than} the input energy so:
+		$$R(l)\leq 1$$
+	\end{itemize}
+\end{itemize}
+\subsection{How to calculate BRDF}
+\subsubsection{From Lambertian Model}
+\begin{itemize}
+	\item \textbf{Lambertian Model}: Only Diffuse Color, No Specular Color. All output direction are the Same.
+	\item In this model, we assume the output energy is part of input energy. So We can build this equation:
+	$$R(l)=C_{diff}$$
+	So:
+	$$C_{diff}=R(l)=\int_\phi f(l,v) cos\theta_0 d\omega$$
+	We know $f(l,v)$ and $C_{diff}$ are both constant number:
+	$$f(l,v) \cdot \int_\phi cos\theta_0 d\omega=C_{diff}$$
+	$$f(l,v)=\frac{C_{diff}}{\pi}$$
+\end{itemize}
+\subsubsection{A little bit harder: Phong Model}
+\begin{itemize}
+	\item We assume the ambient light equal to 0 then the shading equation is:
+	$$L_0=(cos\theta_i * C_{diff} + (cos\alpha_r)^{spec}*C_{spec})\times B_L$$
+	\begin{itemize}
+		\item first part is \textbf{Lambertian model}
+		\item $\alpha_r$ is the angel between reflection vector and camera vector
+	\end{itemize}
+	\item And we have shading equation in BRDF format:
+	$$L_0(v)= f(l,v)\times E_l cos\theta_{ik}$$
+	\item So we have a basic equation for $f(l,v)$ that:
+	$$f(l,v)=\frac{C_{diff}}{\pi}+\frac{(cos\alpha_r)^{spec}*C_{spec}}{\pi * cos\theta_i}$$
+	\item Notices that: If we need to normalize this equation, let $R_{spec}(l) = C_{spec}$
+	\item First: When $\theta_i=\frac{\pi}{2}$, $f(l,v)=+\inf$, which is implausible, so we times $cos\theta_i$ and a constant $k$:
+	$$f_{spec}(l,v)=k * \frac{(cos\alpha_r)^{spec}*C_{spec}}{\pi}$$
+	\item Second:
+	$$C_{spec}=R(l)=\int_\phi k*f_{spec}(l,v) cos\theta_0 d\omega=k*C_{spec}/\pi * \int_\phi(cos\alpha_r)^{spec} cos\theta_0d\omega$$
+	\item It's very hard to do this calculation, by experience we can get:
+	$$k=\frac{spec+2}{2}$$
+	\item So in Phong Model:
+	$$f(l,v)=\frac{C_{diff}}{\pi} + \frac{(spec+2)C_{spec}*(cos\alpha_r)^{spec}}{2\pi}$$
+\end{itemize}
+\subsubsection{A little bit more harder: Blinn-Phong Model}
+\begin{itemize}
+	\item We define $\vec{H}$ is the Halfway-Vector(Normalize the vector of the middle point) of input vector and camera vector.
+	$$H=\frac{L+V}{|L+V|}$$ 
+	\item Shading equation:
+	$$L_0=(cos\theta_i * C_{diff} + (cos\beta)^{spec}*C_{spec})\times B_L$$
+	$\beta$ is the angel between $H$ and surface normal vector.
+	\item Follow the step in Phong Model:
+	$$k=\frac{spec+8}{8}$$
+	\item And:
+	$$f(l,v)=\frac{C_{diff}}{\pi} + \frac{(spec+8)C_{spec}*(cos\beta)^{spec}}{8\pi}$$
+\end{itemize}
+\subsubsection{Microfacet Model in \href{https://disney-animation.s3.amazonaws.com/library/s2012_pbs_disney_brdf_notes_v2.pdf}{Disney Paper}}
+\begin{itemize}
+	\item Equation First:
+	$$f(l,v)=diffuse + \frac{D(\theta_h)F(\theta_d)G(\theta_l,\theta_v)}{4cos\theta_l cos\theta_v}$$
+	\item Microfacet Model: The surface is an aggregate of many microfacet, each microfacet have different normal and you can only see part of the microfacet, and some microfacet might be blocked by others.
+	\item How many microfacets you can see is define by $D(\theta_h)$
+	\item How many microfacets is blocked by other microfacets is define by $G(\theta_l,\theta_v)$
+	\item The fraction of reflaction energy in the total input energy is define by $F(\theta_d)$ 
+	\item $\frac{1}{4cos\theta_l cos\theta_v}$ is a normalize factor. 
+\end{itemize}
+\subsubsection{BRDF With Physics Based Render}
+\begin{itemize}
+	\item In Disney's paper Section 5.3~5.6, it present how \textbf{roughness} can affect diffuse function and G function.
+	\item Diffuse Function:
+	$$diffuse=\frac{baseColor}{\pi}(1+(F_{D90}-1)(1-cos\theta_l)^5)(1+(F_{D90}-1)(1-cos\theta_v)^5)$$
+	$$F_{D90}=0.5+2*cos\theta^2_d*roughness$$
+	\item D Function:
+	$$D_GTR=\frac{c}{(\alpha^2cos^2\theta_h +sin^2\theta_h)^\gamma}$$
+	$$\alpha=roughness^2$$
+	\item F Function:
+	$$F_{Schlick}=F_0 + (1-F_0)(1-cos\theta_d)^5$$
+	\item G Function: Using GGX Function\\
+	Reference: \textit{Microfacet Models for Refraction through Rough Surfaces }
+	$$\alpha_g=(0.5+roughness/2)^2$$
+\end{itemize}
+\section{Next Step:}
+\begin{itemize}
+	\item Build the BRDF shading function in unity.
+	\item Find a better diffuse,D,F,G Function
+	\item Put some new variable into diffuse,D,F,G
+\end{itemize}
 \end{document}
